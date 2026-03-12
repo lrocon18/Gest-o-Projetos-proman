@@ -4,11 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 var __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
+    base: './',
     plugins: [react()],
     resolve: { alias: { '@': path.resolve(__dirname, './src') } },
-    server: {
-        proxy: {
-            '/api': { target: 'http://localhost:3001', changeOrigin: true },
-        },
-    },
 });
