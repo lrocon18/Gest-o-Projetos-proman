@@ -1,10 +1,14 @@
 import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 
 /**
  * Logo Grupo Proman Engenharia (imagem oficial: círculo verde, GRUPO PROMAN® Engenharia).
  */
 export default function Logo({ className = '' }: { className?: string }) {
   const [imgError, setImgError] = useState(false)
+  const pathname = useLocation().pathname
+  const base = pathname.split('/').filter(Boolean)[0]
+  const logoSrc = base ? `/${base}/logo.png` : '/logo.png'
 
   if (imgError) {
     return (
@@ -19,7 +23,7 @@ export default function Logo({ className = '' }: { className?: string }) {
   return (
     <div className={`flex items-center gap-3 bg-transparent ${className}`}>
       <img
-        src={`${import.meta.env.BASE_URL}logo.png`}
+        src={logoSrc}
         alt="Grupo Proman Engenharia"
         className="h-12 w-auto max-h-14 object-contain flex-shrink-0 bg-transparent"
         style={{ background: 'transparent' }}

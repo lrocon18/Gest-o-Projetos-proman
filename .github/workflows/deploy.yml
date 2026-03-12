@@ -32,9 +32,7 @@ jobs:
 
       - name: Build frontend
         run: npm run build
-        env:
-          # Deve ser igual ao nome do repositório (como na URL do Pages)
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+        # base: './' no Vite — assets relativos; basename do router em runtime
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

@@ -8,12 +8,17 @@ import { ProjectsProvider } from './contexts/ProjectsContext'
 import { ToastProvider } from './contexts/ToastContext'
 import './index.css'
 
-// No build para Pages, BASE_URL = /repo-name/; em dev = /
-const basename = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || ''
+// Basename em runtime: no Pages é /primeiro-segmento (ex: /Gest-o-Projetos-proman), em dev é ''
+function getBasename(): string {
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+  if (!pathname || pathname === '/') return ''
+  const parts = pathname.split('/').filter(Boolean)
+  return parts.length > 0 ? `/${parts[0]}` : ''
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter basename={basename}>
+    <BrowserRouter basename={getBasename()}>
       <ThemeProvider>
         <AuthProvider>
           <ProjectsProvider>
