@@ -32,9 +32,7 @@ jobs:
 
       - name: Build frontend
         run: npm run build
-        env:
-          # Base path = nome do repositório (igual à URL do Pages)
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+        # Sem VITE_BASE_PATH: usa base relativo (./) para evitar tela em branco no Pages
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
