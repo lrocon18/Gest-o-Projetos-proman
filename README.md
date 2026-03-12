@@ -37,6 +37,15 @@ O repositório inclui dois workflows em `.github/workflows/`:
 2. Em **Build and deployment**, em **Source** escolha **GitHub Actions**.
 3. Após o primeiro push na `main`, o site ficará em `https://<seu-usuario>.github.io/<nome-do-repo>/`.
 
+**Se o site não abrir (404):**
+
+- Confirme que em **Settings → Pages** a fonte está em **GitHub Actions** (não "Deploy from a branch").
+- Use a **URL exata** do repositório: `https://<usuario>.github.io/<nome-do-repo>/`. O `<nome-do-repo>` deve ser **exatamente** o nome do repositório no GitHub (com a mesma grafia, incluindo maiúsculas/minúsculas).
+- Se o nome tiver acento (ex.: **Gestão**-Projetos-proman), experimente:
+  - **Com acento (codificado):** `https://lrocon18.github.io/Gest%C3%A3o-Projetos-proman/`
+  - **Sem acento:** `https://lrocon18.github.io/Gestao-Projetos-proman/` — nesse caso, **renomeie o repositório** no GitHub para `Gestao-Projetos-proman` (Settings → General → Repository name) e faça um novo push para o deploy usar esse nome.
+- Em **Actions**, confira se o workflow "Deploy to GitHub Pages" terminou em verde nos dois jobs (build e deploy).
+
 ---
 
 ## Como rodar
