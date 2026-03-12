@@ -3,10 +3,29 @@ import type { ProjectFile, ProjectRow, ProjectMeta } from '@/types/project'
 
 const STORAGE_KEY = 'proman_projects'
 
+function createEmptyRow(): ProjectRow {
+  const id = `row_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+  return {
+    id,
+    pc: '',
+    nome: '',
+    nomeFull: 'Novo item',
+    cat: 'Civil',
+    status: 'Não iniciado',
+    resp: '',
+    ini: null,
+    fim: null,
+    dias: null,
+    obs: '',
+  }
+}
+
 interface ProjectsContextType {
   projects: ProjectFile[]
   addProject: (name: string, rows: ProjectRow[], meta?: ProjectMeta) => ProjectFile
+  addProjectRow: (projectId: string, row?: Partial<ProjectRow>) => ProjectRow
   removeProject: (id: string) => void
+  removeProjectRow: (projectId: string, rowId: string) => void
   getProject: (id: string) => ProjectFile | undefined
   updateProjectRows: (projectId: string, rows: ProjectRow[]) => void
   updateProjectRow: (projectId: string, rowId: string, patch: Partial<ProjectRow>) => void
@@ -64,9 +83,37 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     [projects, persist]
   )
 
+  const addProjectRow = useCallback(
+    (projectId: string, rowPatch?: Partial<ProjectRow>): ProjectRow => {
+      const newRow = { ...createEmptyRow(), ...rowPatch }
+      newRow.iniD = newRow.ini ? new Date(newRow.ini) : null
+      newRow.fimD = newRow.fim ? new Date(newRow.fim) : null
+      persist(
+        projects.map((p) => {
+          if (p.id !== projectId) return p
+          return { ...p, rows: [...p.rows, newRow] }
+        })
+      )
+      return newRow
+    },
+    [projects, persist]
+  )
+
   const removeProject = useCallback(
     (id: string) => {
       persist(projects.filter((p) => p.id !== id))
+    },
+    [projects, persist]
+  )
+
+  const removeProjectRow = useCallback(
+    (projectId: string, rowId: string) => {
+      persist(
+        projects.map((p) => {
+          if (p.id !== projectId) return p
+          return { ...p, rows: p.rows.filter((r) => r.id !== rowId) }
+        })
+      )
     },
     [projects, persist]
   )
@@ -118,7 +165,9 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
       value={{
         projects,
         addProject,
+        addProjectRow,
         removeProject,
+        removeProjectRow,
         getProject,
         updateProjectRows,
         updateProjectRow,

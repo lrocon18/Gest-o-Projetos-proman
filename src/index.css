@@ -41,3 +41,17 @@ body {
   color: var(--text);
   min-height: 100vh;
 }
+
+/* Tooltips dos gráficos (Recharts) — texto em contraste com o tema */
+.recharts-default-tooltip,
+.recharts-tooltip-wrapper {
+  color: var(--text) !important;
+}
+.recharts-default-tooltip .recharts-tooltip-label,
+.recharts-default-tooltip .recharts-tooltip-item {
+  color: var(--text) !important;
+}
+.recharts-tooltip-item-value,
+.recharts-tooltip-item-unit {
+  color: var(--text) !important;
+}

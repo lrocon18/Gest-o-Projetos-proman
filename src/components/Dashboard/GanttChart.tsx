@@ -4,6 +4,8 @@ import { STATUS_COLORS } from '@/lib/chartColors'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
+const MAX_TIMELINE_MS = 3 * 365.25 * 24 * 60 * 60 * 1000 // 3 anos
+
 interface GanttChartProps {
   rows: ProjectRow[]
 }
@@ -16,10 +18,14 @@ export default function GanttChart({ rows }: GanttChartProps) {
     }
     const dates = withDates.flatMap((r) => [r.iniD!, r.fimD!].filter(Boolean))
     const min = new Date(Math.min(...dates.map((d) => d.getTime())))
-    const max = new Date(Math.max(...dates.map((d) => d.getTime())))
+    let max = new Date(Math.max(...dates.map((d) => d.getTime())))
     min.setMonth(min.getMonth() - 1)
     min.setDate(1)
     max.setMonth(max.getMonth() + 2)
+    const spanMs = max.getTime() - min.getTime()
+    if (spanMs > MAX_TIMELINE_MS) {
+      max = new Date(min.getTime() + MAX_TIMELINE_MS)
+    }
     const months: string[] = []
     const d = new Date(min)
     while (d <= max) {
@@ -38,13 +44,15 @@ export default function GanttChart({ rows }: GanttChartProps) {
     return rows
       .filter((r) => r.iniD)
       .map((p) => {
-        const s = Math.max(0, ((p.iniD!.getTime() - min.getTime()) / span) * 100)
+        const s = ((p.iniD!.getTime() - min.getTime()) / span) * 100
         const end = p.fimD || new Date(p.iniD!.getTime() + 30 * 24 * 60 * 60 * 1000)
-        const e = Math.min(100, ((end.getTime() - min.getTime()) / span) * 100)
-        const w = Math.max(2, e - s)
+        const e = ((end.getTime() - min.getTime()) / span) * 100
+        const left = Math.max(0, Math.min(100, s))
+        const endClamped = Math.min(100, Math.max(0, e))
+        const w = Math.max(2, endClamped - left)
         return {
           ...p,
-          left: s,
+          left,
           width: w,
           color: STATUS_COLORS[p.status] ?? '#6b7280',
         }

@@ -36,9 +36,12 @@ export default function DiasBarChart({ rows }: DiasBarChartProps) {
             background: 'var(--surf)',
             border: '1px solid var(--bdr)',
             borderRadius: '8px',
+            color: 'var(--text)',
           }}
           formatter={(value: number) => [`${value} dias`, 'RDO']}
           labelStyle={{ color: 'var(--text)' }}
+          itemStyle={{ color: 'var(--text)' }}
+          cursor={{ fill: 'var(--surf2)' }}
         />
         <Bar dataKey="dias" radius={4} minPointSize={4}>
           {withDias.map((entry, i) => (

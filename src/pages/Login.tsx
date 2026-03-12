@@ -17,7 +17,7 @@ export default function Login() {
     setError('')
     const ok = login(user, password)
     if (ok) navigate('/', { replace: true })
-    else setError('Usuário ou senha inválidos. Para demo: use qualquer usuário e senha "proman" (ou 4+ caracteres).')
+    else setError('Usuário ou senha inválidos.')
   }
 
   return (
@@ -74,9 +74,6 @@ export default function Login() {
             Entrar
           </button>
         </form>
-        <p className="mt-4 text-center text-xs text-[var(--muted)]">
-          Demo: senha <code className="bg-[var(--surf2)] px-1 rounded">proman</code> ou 4+ caracteres
-        </p>
       </div>
     </div>
   )

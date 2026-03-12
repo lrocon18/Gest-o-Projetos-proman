@@ -46,8 +46,11 @@ export default function StatusDonut({ rows }: StatusDonutProps) {
             background: 'var(--surf)',
             border: '1px solid var(--bdr)',
             borderRadius: '8px',
+            color: 'var(--text)',
           }}
           labelStyle={{ color: 'var(--text)' }}
+          itemStyle={{ color: 'var(--text)' }}
+          cursor={{ fill: 'var(--surf2)' }}
         />
         <Legend
           formatter={(value, entry) => (

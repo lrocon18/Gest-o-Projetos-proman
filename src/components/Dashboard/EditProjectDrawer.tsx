@@ -1,10 +1,15 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { format, differenceInCalendarDays, parseISO, isValid } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import type { ProjectRow, ProjectStatus } from '@/types/project'
 import { STATUS_COLORS, STATUS_CLASSES } from '@/lib/chartColors'
 
 const STATUS_OPTIONS: ProjectStatus[] = ['Não iniciado', 'Em espera', 'Em andamento', 'Concluído']
+
+const TIPO_PROJETO_OPTIONS = [
+  { label: 'Projeto de Civil', value: 'Civil' },
+  { label: 'Projeto de Elétrica', value: 'Elétrica' },
+] as const
 
 function progressPct(row: ProjectRow): number {
   if (row.status === 'Concluído') return 100
@@ -50,6 +55,32 @@ interface EditProjectDrawerProps {
   projectName: string
   rows: ProjectRow[]
   onUpdateRow: (projectId: string, rowId: string, patch: Partial<ProjectRow>) => void
+  onAddRow?: (projectId: string) => void
+  onRemoveRow?: (projectId: string, rowId: string) => void
+}
+
+function TrashIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+    </svg>
+  )
 }
 
 export default function EditProjectDrawer({
@@ -59,10 +90,21 @@ export default function EditProjectDrawer({
   projectName,
   rows,
   onUpdateRow,
+  onAddRow,
+  onRemoveRow,
 }: EditProjectDrawerProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<Partial<ProjectRow>>({})
+
+  const handleRemoveRow = (rowId: string) => {
+    onRemoveRow?.(projectId, rowId)
+    if (expandedId === rowId) setExpandedId(null)
+    if (editingId === rowId) {
+      setEditingId(null)
+      setForm({})
+    }
+  }
 
   const handleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id))
@@ -75,6 +117,9 @@ export default function EditProjectDrawer({
   const handleStartEdit = (row: ProjectRow) => {
     setEditingId(row.id)
     setForm({
+      nomeFull: row.nomeFull,
+      nome: row.nome,
+      cat: row.cat,
       pc: row.pc,
       resp: row.resp,
       ini: row.ini,
@@ -99,7 +144,11 @@ export default function EditProjectDrawer({
     const ini = (form.ini as string | null) ?? row.ini
     const fim = (form.fim as string | null) ?? row.fim
     const dias = computedDias(ini, fim)
+    const nomeFull = (form.nomeFull as string) ?? row.nomeFull
     onUpdateRow(projectId, editingId, {
+      nomeFull: nomeFull || row.nomeFull,
+      nome: nomeFull || row.nome,
+      cat: (form.cat as string) ?? row.cat,
       pc: (form.pc as string) ?? row.pc,
       resp: (form.resp as string) ?? row.resp,
       ini: ini || null,
@@ -129,21 +178,43 @@ export default function EditProjectDrawer({
       >
         <div className="flex items-center justify-between border-b border-[var(--bdr)] px-4 py-3">
           <h2 className="text-lg font-bold text-[var(--text)]">Editar projeto — {projectName}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 rounded-lg text-[var(--muted)] hover:bg-[var(--surf2)] hover:text-[var(--text)]"
-            aria-label="Fechar"
-          >
-            <span className="text-xl leading-none">×</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {onAddRow && (
+              <button
+                type="button"
+                onClick={() => onAddRow(projectId)}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[#2F523E] text-white hover:bg-[#3d6b4f]"
+              >
+                Adicionar item
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 rounded-lg text-[var(--muted)] hover:bg-[var(--surf2)] hover:text-[var(--text)]"
+              aria-label="Fechar"
+            >
+              <span className="text-xl leading-none">×</span>
+            </button>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          {rows.length === 0 && (
+            <p className="text-sm text-[var(--muted)] py-4 text-center">
+              Nenhum item ainda. Clique em &quot;Adicionar item&quot; para criar o primeiro.
+            </p>
+          )}
           {rows.map((row) => {
             const isExpanded = expandedId === row.id
             const isEditing = editingId === row.id
             const displayRow: ProjectRow = isEditing
-              ? { ...row, status: (form.status as ProjectStatus) ?? row.status }
+              ? {
+                  ...row,
+                  nomeFull: (form.nomeFull as string) ?? row.nomeFull,
+                  nome: (form.nome as string) ?? row.nome,
+                  cat: (form.cat as string) ?? row.cat,
+                  status: (form.status as ProjectStatus) ?? row.status,
+                }
               : row
             const pct = progressPct(displayRow)
             const pcolor = progressColor(pct)
@@ -198,6 +269,43 @@ export default function EditProjectDrawer({
                     </div>
 
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                      <div className="col-span-2">
+                        <div className="text-[10px] uppercase text-[var(--muted)] mb-1">Nome do item</div>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={form.nomeFull ?? row.nomeFull}
+                            onChange={(e) => {
+                              handleChange('nomeFull', e.target.value)
+                              handleChange('nome', e.target.value)
+                            }}
+                            placeholder="Ex: Proteção tancagem..."
+                            className="w-full px-2 py-1.5 rounded-lg border border-[var(--bdr)] bg-[var(--bg)] text-[var(--text)] text-xs"
+                          />
+                        ) : (
+                          <span className="text-[var(--text)]">{displayRow.nomeFull || displayRow.nome || '—'}</span>
+                        )}
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-[10px] uppercase text-[var(--muted)] mb-1">Tipo de projeto</div>
+                        {isEditing ? (
+                          <select
+                            value={form.cat ?? row.cat}
+                            onChange={(e) => handleChange('cat', e.target.value)}
+                            className="w-full px-2 py-1.5 rounded-lg border border-[var(--bdr)] bg-[var(--bg)] text-[var(--text)] text-xs"
+                          >
+                            {TIPO_PROJETO_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="text-[var(--text)]">
+                            {TIPO_PROJETO_OPTIONS.find((o) => o.value === displayRow.cat)?.label ?? displayRow.cat ?? '—'}
+                          </span>
+                        )}
+                      </div>
                       <div className="col-span-2">
                         <div className="text-[10px] uppercase text-[var(--muted)] mb-1">Status</div>
                         {isEditing ? (
@@ -321,7 +429,7 @@ export default function EditProjectDrawer({
                     </div>
 
                     {isEditing ? (
-                      <div className="flex gap-2 mt-3">
+                      <div className="flex flex-wrap gap-2 mt-3">
                         <button
                           type="button"
                           onClick={handleCancelEdit}
@@ -336,15 +444,39 @@ export default function EditProjectDrawer({
                         >
                           Salvar
                         </button>
+                        {onRemoveRow && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveRow(row.id)}
+                            className="p-2 rounded-lg text-red-500 hover:bg-red-500/10 hover:text-red-600 flex-shrink-0"
+                            aria-label="Excluir item"
+                            title="Excluir item"
+                          >
+                            <TrashIcon />
+                          </button>
+                        )}
                       </div>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleStartEdit(row)}
-                        className="mt-3 text-xs text-[var(--orange)] hover:underline"
-                      >
-                        Editar
-                      </button>
+                      <div className="flex items-center gap-3 mt-3">
+                        <button
+                          type="button"
+                          onClick={() => handleStartEdit(row)}
+                          className="text-xs text-[var(--orange)] hover:underline"
+                        >
+                          Editar
+                        </button>
+                        {onRemoveRow && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveRow(row.id)}
+                            className="flex items-center gap-1.5 text-xs text-red-500 hover:underline"
+                            aria-label="Excluir item"
+                          >
+                            <TrashIcon className="w-3.5 h-3.5" />
+                            Excluir
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}

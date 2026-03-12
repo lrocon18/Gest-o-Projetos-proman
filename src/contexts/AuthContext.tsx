@@ -22,12 +22,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   })
 
   const login = useCallback((username: string, password: string) => {
-    // Validação simples para demo: qualquer usuário + senha "proman" ou não vazia
-    if (!username.trim()) return false
-    const ok = password === 'proman' || password.length >= 4
+    const ok = username.trim() === 'Admin' && password === 'Admin@10'
     if (ok) {
-      setUser(username.trim())
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: username.trim() }))
+      setUser('Admin')
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: 'Admin' }))
     }
     return ok
   }, [])

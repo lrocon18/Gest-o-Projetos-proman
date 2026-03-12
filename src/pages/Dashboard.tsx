@@ -15,12 +15,13 @@ type StatusFilter = 'todos' | ProjectRow['status']
 export default function Dashboard() {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
-  const { getProject, updateProjectRow } = useProjects()
+  const { getProject, updateProjectRow, addProjectRow, removeProjectRow } = useProjects()
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('todos')
   const [editDrawerOpen, setEditDrawerOpen] = useState(false)
 
   const project = projectId ? getProject(projectId) : null
   const allRows = project?.rows ?? []
+  const isEmpty = allRows.length === 0
   const rows = useMemo(() => {
     if (statusFilter === 'todos') return allRows
     return allRows.filter((r) => r.status === statusFilter)
@@ -76,62 +77,86 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="border-b border-[var(--bdr)] bg-[var(--surf2)] px-4 py-2 flex flex-wrap items-center gap-2">
-        <span className="text-xs text-[var(--muted)] w-full sm:w-auto">Filtrar por status:</span>
-        {(['todos', 'Em andamento', 'Em espera', 'Não iniciado', 'Concluído'] as const).map(
-          (s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
-                statusFilter === s
-                  ? 'bg-[var(--orange)] text-black border-[var(--orange)] font-bold'
-                  : 'border-[var(--bdr)] bg-[var(--surf)] text-[var(--muted)] hover:bg-[var(--bdr)]'
-              }`}
-            >
-              {s === 'todos' ? 'Todos' : s}
-            </button>
-          )
-        )}
-      </div>
+      {!isEmpty && (
+        <div className="border-b border-[var(--bdr)] bg-[var(--surf2)] px-4 py-2 flex flex-wrap items-center gap-2">
+          <span className="text-xs text-[var(--muted)] w-full sm:w-auto">Filtrar por status:</span>
+          {(['todos', 'Em andamento', 'Em espera', 'Não iniciado', 'Concluído'] as const).map(
+            (s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatusFilter(s)}
+                className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                  statusFilter === s
+                    ? 'bg-[var(--orange)] text-black border-[var(--orange)] font-bold'
+                    : 'border-[var(--bdr)] bg-[var(--surf)] text-[var(--muted)] hover:bg-[var(--bdr)]'
+                }`}
+              >
+                {s === 'todos' ? 'Todos' : s}
+              </button>
+            )
+          )}
+        </div>
+      )}
 
       <main className="max-w-6xl mx-auto p-4 sm:p-6 pb-12">
-        <div className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-3">
-          Visão Geral
-        </div>
-        <KpiGrid rows={rows} />
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-          <div className="rounded-xl border border-[var(--bdr)] bg-[var(--surf)] p-4">
-            <h3 className="font-bold text-[var(--text)]">Status dos Projetos</h3>
-            <p className="text-xs text-[var(--muted)] mb-2">Distribuição por situação</p>
-            <StatusDonut rows={rows} />
+        {isEmpty ? (
+          <div
+            className="rounded-xl border border-[var(--bdr)] bg-[var(--surf)] p-12 text-center"
+          >
+            <p className="text-lg font-semibold text-[var(--text)] mb-2">
+              Vamos iniciar a customização
+            </p>
+            <p className="text-sm text-[var(--muted)] mb-6">
+              Adicione itens ao projeto para preencher o dashboard.
+            </p>
+            <button
+              type="button"
+              onClick={() => setEditDrawerOpen(true)}
+              className="px-5 py-2.5 rounded-xl font-medium bg-[#2F523E] text-white hover:bg-[#3d6b4f] dark:hover:bg-[#3dd68c]/90"
+            >
+              Iniciar customização
+            </button>
           </div>
-          <div className="rounded-xl border border-[var(--bdr)] bg-[var(--surf)] p-4">
-            <h3 className="font-bold text-[var(--text)]">Dias Trabalhados</h3>
-            <p className="text-xs text-[var(--muted)] mb-2">RDOs por projeto</p>
-            <DiasBarChart rows={rows} />
-          </div>
-        </div>
+        ) : (
+          <>
+            <div className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-3">
+              Visão Geral
+            </div>
+            <KpiGrid rows={rows} />
 
-        <div className="rounded-xl border border-[var(--bdr)] bg-[var(--surf)] p-4 mb-6">
-          <h3 className="font-bold text-[var(--text)]">Timeline — Gantt</h3>
-          <p className="text-xs text-[var(--muted)] mb-2">
-            Linha vermelha = hoje
-          </p>
-          <GanttChart rows={allRows} />
-        </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+              <div className="rounded-xl border border-[var(--bdr)] bg-[var(--surf)] p-4">
+                <h3 className="font-bold text-[var(--text)]">Status dos Projetos</h3>
+                <p className="text-xs text-[var(--muted)] mb-2">Distribuição por situação</p>
+                <StatusDonut rows={rows} />
+              </div>
+              <div className="rounded-xl border border-[var(--bdr)] bg-[var(--surf)] p-4">
+                <h3 className="font-bold text-[var(--text)]">Dias Trabalhados</h3>
+                <p className="text-xs text-[var(--muted)] mb-2">RDOs por projeto</p>
+                <DiasBarChart rows={rows} />
+              </div>
+            </div>
 
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">
-            Projetos
-          </span>
-          <span className="text-xs bg-[var(--surf2)] border border-[var(--bdr)] text-[var(--blue)] px-2 py-0.5 rounded font-semibold">
-            {rows.length} projeto{rows.length !== 1 ? 's' : ''}
-          </span>
-        </div>
-        <ProjectCards rows={rows} />
+            <div className="rounded-xl border border-[var(--bdr)] bg-[var(--surf)] p-4 mb-6">
+              <h3 className="font-bold text-[var(--text)]">Timeline — Gantt</h3>
+              <p className="text-xs text-[var(--muted)] mb-2">
+                Linha vermelha = hoje
+              </p>
+              <GanttChart rows={allRows} />
+            </div>
+
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">
+                Projetos
+              </span>
+              <span className="text-xs bg-[var(--surf2)] border border-[var(--bdr)] text-[var(--blue)] px-2 py-0.5 rounded font-semibold">
+                {rows.length} projeto{rows.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <ProjectCards rows={rows} />
+          </>
+        )}
       </main>
 
       <EditProjectDrawer
@@ -141,6 +166,8 @@ export default function Dashboard() {
         projectName={project.meta?.titulo || project.name}
         rows={allRows}
         onUpdateRow={updateProjectRow}
+        onAddRow={addProjectRow}
+        onRemoveRow={removeProjectRow}
       />
     </div>
   )
