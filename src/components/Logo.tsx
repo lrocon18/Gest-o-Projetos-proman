@@ -19,7 +19,7 @@ export default function Logo({ className = '' }: { className?: string }) {
   return (
     <div className={`flex items-center gap-3 bg-transparent ${className}`}>
       <img
-        src="/logo.png"
+        src={`${import.meta.env.BASE_URL}logo.png`}
         alt="Grupo Proman Engenharia"
         className="h-12 w-auto max-h-14 object-contain flex-shrink-0 bg-transparent"
         style={{ background: 'transparent' }}
